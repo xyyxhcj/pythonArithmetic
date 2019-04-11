@@ -51,8 +51,9 @@ class MineSweepData:
     }
 
     def __init__(self, num) -> None:
-        # 创建初始值为-1的二维数组,用于展示画面
-        self.data = [[DEFAULT_VALUE for i in range(MINE_Y_MAX)] for i in range(MINE_X_MAX)]
+        # 初始化二维数组,用于存储展示画面的对应数据
+        self.data = [[{'val': DEFAULT_VALUE, 'img': self.img[DEFAULT_VALUE]} for i in range(MINE_Y_MAX)] for i in
+                     range(MINE_X_MAX)]
         # 存储雷区字典
         self.mine_data = {}
         # 存储标记数量
@@ -70,10 +71,15 @@ class MineSweepData:
     def refresh_label(self):
         self.label_value.set('剩余数量：' + str(self.mine_num - self.flag_num))
 
+    def refresh_img(self, x, y):
+        show_data = self.data[x][y]
+        show_data['img'].configure(image=self.img[show_data['val']])
+        # 批量更新图片:ROOT.update_idletasks()
+
     def show(self):
         for x, arr in enumerate(self.data):
             for y, val in enumerate(arr):
-                button = tkinter.Button(ROOT, image=self.img[val], width=WIDTH, height=HEIGHT,
+                button = tkinter.Button(ROOT, image=val['img'], width=WIDTH, height=HEIGHT,
                                         command=lambda: self.click(x, y))
                 # 绑定右击事件 事件关联参数: https://www.cnblogs.com/aland-1415/p/6849193.html
                 button.bind('<Button-3>', lambda event, x1=x, y1=y: self.click_right(x1, y1))
@@ -89,11 +95,11 @@ class MineSweepData:
 
     def click_right(self, x, y):
         # 反选区域标记
-        if FLAG_VALUE == self.data[x][y]:
-            self.data[x][y] = DEFAULT_VALUE
+        if FLAG_VALUE == self.data[x][y]['val']:
+            self.data[x][y]['val'] = DEFAULT_VALUE
             self.flag_num -= 1
-        elif DEFAULT_VALUE == self.data[x][y]:
-            self.data[x][y] = FLAG_VALUE
+        elif DEFAULT_VALUE == self.data[x][y]['val']:
+            self.data[x][y]['val'] = FLAG_VALUE
             self.flag_num += 1
         self.refresh_label()
 
