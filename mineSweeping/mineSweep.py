@@ -1,17 +1,43 @@
+import random
 import tkinter
 
 # 配置
 ROOT = tkinter.Tk(className='扫雷')
+# 刷新延迟
+DELAY = 1000
 # 长宽
 HEIGHT = 20
 WIDTH = 20
+# 雷区数量
+MINE_NUM = 20
+# 雷区x坐标范围
+MINE_X_MAX = 20
+MINE_Y_MAX = 15
+# 雷
+MINE_VALUE = -3
+# 标记
+FLAG_VALUE = -2
+DEFAULT_VALUE = -1
+
+
+# 更新字典
+def update(t_dict, key_x, key_y, value, length):
+    if key_x not in t_dict:
+        t_dict[key_x] = {}
+    elif key_y not in t_dict[key_x]:
+        t_dict[key_x][key_y] = value
+        length += 1
+    return length
 
 
 class MineSweepData:
     # 定义值对应的图片
     img = {
+        # 未探索
         -1: tkinter.PhotoImage(file='./png/block.png'),
+        # 标记
         -2: tkinter.PhotoImage(file='./png/flag.png'),
+        # 雷
         -3: tkinter.PhotoImage(file='./png/mine.png'),
         0: tkinter.PhotoImage(file='./png/0.png'),
         1: tkinter.PhotoImage(file='./png/1.png'),
@@ -24,19 +50,56 @@ class MineSweepData:
         8: tkinter.PhotoImage(file='./png/8.png'),
     }
 
-    def __init__(self) -> None:
-        # 创建初始值为-1的二维数组
-        self.data = [[-1 for i in range(20)] for i in range(20)]
+    def __init__(self, num) -> None:
+        # 创建初始值为-1的二维数组,用于展示画面
+        self.data = [[DEFAULT_VALUE for i in range(MINE_Y_MAX)] for i in range(MINE_X_MAX)]
+        # 存储雷区字典
+        self.mine_data = {}
+        # 存储标记数量
+        self.flag_num = 0
+        # 存储雷区数量
+        self.mine_num = 0
+        self.label_value = tkinter.StringVar()
+        # 存储随机雷区
+        while self.mine_num < num:
+            x = random.randint(0, MINE_X_MAX)
+            y = random.randint(0, MINE_Y_MAX)
+            self.mine_num = update(self.mine_data, x, y, MINE_VALUE, self.mine_num)
+
+    # 刷新数据
+    def refresh_label(self):
+        self.label_value.set('剩余数量：' + str(self.mine_num - self.flag_num))
 
     def show(self):
         for x, arr in enumerate(self.data):
             for y, val in enumerate(arr):
-                tkinter.Button(ROOT, image=self.img[val], width=WIDTH, height=HEIGHT).grid(row=y, column=x)
+                button = tkinter.Button(ROOT, image=self.img[val], width=WIDTH, height=HEIGHT,
+                                        command=lambda: self.click(x, y))
+                # 绑定右击事件 事件关联参数: https://www.cnblogs.com/aland-1415/p/6849193.html
+                button.bind('<Button-3>', lambda event, x1=x, y1=y: self.click_right(x1, y1))
+                button.grid(row=y, column=x)
+        self.refresh_label()
+        label = tkinter.Label(ROOT, textvariable=self.label_value)
+        label.grid(row=MINE_Y_MAX, columnspan=MINE_X_MAX)
         ROOT.mainloop()
+
+    def click(self, x, y):
+        # 如果是雷区则game over,否则计算周围雷区数量,显示对应图片
+        print(self.data[x][y])
+
+    def click_right(self, x, y):
+        # 反选区域标记
+        if FLAG_VALUE == self.data[x][y]:
+            self.data[x][y] = DEFAULT_VALUE
+            self.flag_num -= 1
+        elif DEFAULT_VALUE == self.data[x][y]:
+            self.data[x][y] = FLAG_VALUE
+            self.flag_num += 1
+        self.refresh_label()
 
 
 def run():
-    MineSweepData().show()
+    MineSweepData(MINE_NUM).show()
 
 
 run()
