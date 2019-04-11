@@ -51,9 +51,8 @@ class MineSweepData:
     }
 
     def __init__(self, num) -> None:
-        # 初始化二维数组,用于存储展示画面的对应数据
-        self.data = [[{'val': DEFAULT_VALUE, 'img': self.img[DEFAULT_VALUE]} for i in range(MINE_Y_MAX)] for i in
-                     range(MINE_X_MAX)]
+        # 用于存储画面对应数据的二维数组
+        self.data = []
         # 存储雷区字典
         self.mine_data = {}
         # 存储标记数量
@@ -73,17 +72,22 @@ class MineSweepData:
 
     def refresh_img(self, x, y):
         show_data = self.data[x][y]
-        show_data['img'].configure(image=self.img[show_data['val']])
+        show_data['btn'].configure(image=self.img[show_data['val']])
         # 批量更新图片:ROOT.update_idletasks()
 
     def show(self):
-        for x, arr in enumerate(self.data):
-            for y, val in enumerate(arr):
-                button = tkinter.Button(ROOT, image=val['img'], width=WIDTH, height=HEIGHT,
-                                        command=lambda: self.click(x, y))
+        # 初始化展示数据
+        for x in range(MINE_X_MAX):
+            y_list = []
+            for y in range(MINE_Y_MAX):
+                button = tkinter.Button(ROOT, image=self.img[DEFAULT_VALUE], width=WIDTH, height=HEIGHT,
+                                        command=lambda x1=x, y1=y: self.click(x1, y1))
                 # 绑定右击事件 事件关联参数: https://www.cnblogs.com/aland-1415/p/6849193.html
                 button.bind('<Button-3>', lambda event, x1=x, y1=y: self.click_right(x1, y1))
                 button.grid(row=y, column=x)
+                # 存储展示数据
+                y_list.append({'val': DEFAULT_VALUE, 'btn': button})
+            self.data.append(y_list)
         self.refresh_label()
         label = tkinter.Label(ROOT, textvariable=self.label_value)
         label.grid(row=MINE_Y_MAX, columnspan=MINE_X_MAX)
@@ -91,6 +95,10 @@ class MineSweepData:
 
     def click(self, x, y):
         # 如果是雷区则game over,否则计算周围雷区数量,显示对应图片
+        # todo test
+        print(x, y)
+        self.data[x][y]['val'] = 5
+        self.refresh_img(x, y)
         print(self.data[x][y])
 
     def click_right(self, x, y):
