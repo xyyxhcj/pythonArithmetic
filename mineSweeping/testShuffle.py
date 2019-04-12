@@ -29,9 +29,10 @@ def shuffle2(arr, hits, num):
 def fisher_yates_shuffle(arr, hits, num):
     for i in range(num):
         for j in range(len(arr) - 1, 0, -1):
-            # 获取0-j之前的随机元素与j转换
-            randint = random.randint(0, j - 1)
-            arr[randint], arr[j] = arr[j], arr[randint]
+            # 获取0-j的随机元素与j置换
+            randint = random.randint(0, j)
+            if randint != j:
+                arr[randint], arr[j] = arr[j], arr[randint]
         # 统计命中次数
         count_hits(arr, hits)
 
