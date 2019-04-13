@@ -1,16 +1,21 @@
 import random
 import tkinter
+from tkinter import messagebox
 
 # 配置
-ROOT = tkinter.Tk(className='扫雷')
+ROOT = tkinter.Tk(className='扫一下雷')
+# 默认窗口坐标
+DEFAULT_WIN_X, DEFAULT_WIN_Y = 3482, 76
 # 长宽
-HEIGHT = 24
-WIDTH = 24
+HEIGHT = 26
+WIDTH = 26
 # 雷区数量
 MINE_NUM = 20
 # 雷区x坐标范围
 MINE_X_MAX = 10
 MINE_Y_MAX = 15
+# 总格子数量
+TOTAL = MINE_X_MAX * MINE_Y_MAX
 # 雷
 MINE_VALUE = -3
 # 标记
@@ -87,14 +92,21 @@ class MineSweepData:
         for i in range(MINE_NUM):
             update(self.mine_data, i % MINE_X_MAX, i // MINE_X_MAX, MINE_VALUE)
         # 初始化字典
-        total = MINE_X_MAX * MINE_Y_MAX
-        for i in range(MINE_NUM, total):
+        for i in range(MINE_NUM, TOTAL):
             update(self.mine_data, i % MINE_X_MAX, i // MINE_X_MAX, DEFAULT_VALUE)
 
         # 使用fisherYates洗牌
-        fisher_yates_shuffle(self.mine_data, total)
+        fisher_yates_shuffle(self.mine_data, TOTAL)
         # 计算左键点开雷区后应该显示的值
-        count_mine(self.mine_data, total)
+        count_mine(self.mine_data, TOTAL)
+        # 提示框
+        self.top = tkinter.Toplevel()
+        self.top.destroy()
+        # 设置窗口位置
+        # ROOT.geometry('+' + str(DEFAULT_WIN_X) + '+' + str(DEFAULT_WIN_Y))
+        ROOT.bind('<Configure>', self.change)
+        # 存储窗口变更后的坐标
+        self.win_x, self.win_y = DEFAULT_WIN_X, DEFAULT_WIN_Y
 
     # 刷新数据
     def refresh_label(self):
@@ -103,9 +115,13 @@ class MineSweepData:
     def refresh_img(self, x, y):
         show_data = self.data[x][y]
         show_data['btn'].configure(image=self.img[show_data['val']])
-        # 批量更新图片:ROOT.update_idletasks()
+        # 仅未探索及标记区域 可使用按键
+        if show_data['val'] == DEFAULT_VALUE or show_data['val'] == FLAG_VALUE:
+            show_data['btn'].configure(state=tkinter.ACTIVE)
+        else:
+            show_data['btn'].configure(state=tkinter.DISABLED)
 
-    def show(self):
+    def start(self):
         # 初始化展示数据
         for x in range(MINE_X_MAX):
             y_list = []
@@ -123,36 +139,41 @@ class MineSweepData:
         label.grid(row=MINE_Y_MAX, columnspan=MINE_X_MAX)
         ROOT.mainloop()
 
-    # 展开空的区域
-    def flood_fill(self, l):
+    # 展开空的区域 flood fill遍历
+    def open(self, l):
         while len(l) > 0:
             x, y = l.pop()
             for x_t in range(x - 1, x + 2):
                 for y_t in range(y - 1, y + 2):
+                    # 判断越界
                     if x_t < 0 or x_t >= MINE_X_MAX or y_t < 0 or y_t >= MINE_Y_MAX:
                         continue
+                    # 判断中心
                     if x_t == x and y_t == y:
                         continue
+                    # 仅处理未探索及未标记区域
                     if self.data[x_t][y_t]['val'] == DEFAULT_VALUE and self.data[x][y]['val'] != FLAG_VALUE:
+                        # 该区域未探索且值为0,需要再次从该点再向八个方向探索
                         if self.mine_data[x_t][y_t] == EMPTY_VALUE:
-                            # 该区域未探索且值为0
                             l.append((x_t, y_t))
                         self.data[x_t][y_t]['val'] = self.mine_data[x_t][y_t]
                         self.refresh_img(x_t, y_t)
+                        if self.mine_data[x_t][y_t] == MINE_VALUE:
+                            self.game_over()
 
     def click(self, x, y):
         if self.data[x][y]['val'] == FLAG_VALUE:
             return
             # 如果是雷区则game over,否则计算周围雷区数量,显示对应图片
         if self.mine_data[x][y] == MINE_VALUE:
-            # todo
-            print('game over')
+            self.game_over()
         self.data[x][y]['val'] = self.mine_data[x][y]
         self.refresh_img(x, y)
         if self.mine_data[x][y] == EMPTY_VALUE:
             # 使用flood fill算法展开空白区域
-            self.flood_fill([(x, y)])
-        print(self.mine_data[x][y])
+            self.open([(x, y)])
+        if self.check_win(TOTAL):
+            self.show_msg_win()
 
     def click_right(self, x, y):
         # 反选区域标记
@@ -162,12 +183,103 @@ class MineSweepData:
         elif DEFAULT_VALUE == self.data[x][y]['val']:
             self.data[x][y]['val'] = FLAG_VALUE
             self.flag_num += 1
+        elif self.data[x][y]['val'] > 0:
+            # 该点为数字,如果四周已标记数量=该数字,则探索其八个方向的格子
+            # 计算四周的标记和未探索区域
+            count_flag, count_default = 0, 0
+            default_temp = []
+            for x_t in range(x - 1, x + 2):
+                for y_t in range(y - 1, y + 2):
+                    if x_t < 0 or x_t >= MINE_X_MAX or y_t < 0 or y_t >= MINE_Y_MAX:
+                        continue
+                    if FLAG_VALUE == self.data[x_t][y_t]['val']:
+                        count_flag += 1
+                    elif DEFAULT_VALUE == self.data[x_t][y_t]['val']:
+                        count_default += 1
+                        default_temp.append((x_t, y_t))
+            if count_flag == self.data[x][y]['val']:
+                self.open([(x, y)])
+            elif count_flag + count_default == self.data[x][y]['val']:
+                # 如果未标记+已标记数量=数字,标记所有默认格子
+                while len(default_temp) > 0:
+                    x_t, y_t = default_temp.pop()
+                    self.data[x_t][y_t]['val'] = FLAG_VALUE
+                    self.flag_num += 1
+                    self.refresh_img(x_t, y_t)
+                    self.refresh_label()
+
         self.refresh_img(x, y)
         self.refresh_label()
+        if self.check_win(TOTAL):
+            self.show_msg_win()
+
+    def game_over(self):
+        # 显示所有雷
+        for i in range(TOTAL):
+            x, y = i % MINE_X_MAX, i // MINE_X_MAX
+            if MINE_VALUE == self.mine_data[x][y]:
+                self.data[x][y]['val'] = MINE_VALUE
+                self.refresh_img(x, y)
+            else:
+                # 单独禁用
+                self.data[x][y]['btn'].configure(state=tkinter.DISABLED)
+        self.show_msg()
+
+    def show_msg(self):
+        self.top = tkinter.Toplevel()
+        self.top.geometry('200x60+' + str(self.win_x) + '+' + str(self.win_y))
+        tkinter.Label(self.top, text='game over').pack()
+        tkinter.Button(self.top, text='try again', command=self.restart).pack()
+
+    def show_msg_win(self):
+        self.top = tkinter.Toplevel()
+        self.top.geometry('200x60+' + str(self.win_x) + '+' + str(self.win_y))
+        tkinter.Label(self.top, text='win！').pack()
+        tkinter.Button(self.top, text='again', command=self.restart).pack()
+
+    def restart(self):
+        self.top.destroy()
+        # 重新加载数据
+        # 存储雷盘实际数据
+        self.mine_data = {}
+        # 重置标记数量
+        self.flag_num = 0
+        # 依序放入雷
+        for i in range(MINE_NUM):
+            update(self.mine_data, i % MINE_X_MAX, i // MINE_X_MAX, MINE_VALUE)
+        # 初始化字典
+        for i in range(MINE_NUM, TOTAL):
+            update(self.mine_data, i % MINE_X_MAX, i // MINE_X_MAX, DEFAULT_VALUE)
+        # 使用fisherYates洗牌
+        fisher_yates_shuffle(self.mine_data, TOTAL)
+        # 计算左键点开雷区后应该显示的值
+        count_mine(self.mine_data, TOTAL)
+        # 重置用于显示的字典
+        self.refresh_label()
+        for i in range(TOTAL):
+            # 赋初始值
+            x = i % MINE_X_MAX
+            y = i // MINE_X_MAX
+            self.data[x][y]['val'] = DEFAULT_VALUE
+            self.refresh_img(x, y)
+
+    def change(self, event):
+        self.win_x, self.win_y = event.x, event.y
+
+    def check_win(self, size):
+        for i in range(size):
+            # 获取坐标
+            x, y = i % MINE_X_MAX, i // MINE_X_MAX
+            if MINE_NUM != self.flag_num or self.data[x][y]['val'] == DEFAULT_VALUE:
+                print(MINE_NUM != self.flag_num)
+                print(self.data[x][y]['val'] == DEFAULT_VALUE)
+                print(self.data[x][y]['val'])
+                return False
+        return True
 
 
 def run():
-    MineSweepData().show()
+    MineSweepData().start()
 
 
 run()
