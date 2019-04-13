@@ -1,6 +1,5 @@
 import random
 import tkinter
-from tkinter import messagebox
 
 # 配置
 ROOT = tkinter.Tk(className='扫一下雷')
@@ -271,9 +270,6 @@ class MineSweepData:
             # 获取坐标
             x, y = i % MINE_X_MAX, i // MINE_X_MAX
             if MINE_NUM != self.flag_num or self.data[x][y]['val'] == DEFAULT_VALUE:
-                print(MINE_NUM != self.flag_num)
-                print(self.data[x][y]['val'] == DEFAULT_VALUE)
-                print(self.data[x][y]['val'])
                 return False
         return True
 
