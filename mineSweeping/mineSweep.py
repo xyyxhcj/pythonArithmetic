@@ -109,7 +109,7 @@ class MineSweepData:
 
     @staticmethod
     def in_area(x, y):
-        return 0 <= x < MINE_X_MAX and 0 < y < MINE_Y_MAX
+        return 0 <= x < MINE_X_MAX and 0 <= y < MINE_Y_MAX
 
     # 刷新数据
     def refresh_label(self):
