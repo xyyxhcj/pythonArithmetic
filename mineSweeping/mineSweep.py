@@ -52,7 +52,7 @@ def count_mine(mine_data, size):
         total = 0
         for x_temp in range(x - 1, x + 2):
             for y_temp in range(y - 1, y + 2):
-                if x_temp < 0 or x_temp >= MINE_X_MAX or y_temp < 0 or y_temp >= MINE_Y_MAX:
+                if not MineSweepData.in_area(x_temp, y_temp):
                     continue
                 if mine_data[x_temp][y_temp] == MINE_VALUE:
                     total += 1
@@ -107,6 +107,10 @@ class MineSweepData:
         # 存储窗口变更后的坐标
         self.win_x, self.win_y = DEFAULT_WIN_X, DEFAULT_WIN_Y
 
+    @staticmethod
+    def in_area(x, y):
+        return 0 <= x < MINE_X_MAX and 0 < y < MINE_Y_MAX
+
     # 刷新数据
     def refresh_label(self):
         self.label_value.set('剩余数量：' + str(MINE_NUM - self.flag_num))
@@ -145,7 +149,7 @@ class MineSweepData:
             for x_t in range(x - 1, x + 2):
                 for y_t in range(y - 1, y + 2):
                     # 判断越界
-                    if x_t < 0 or x_t >= MINE_X_MAX or y_t < 0 or y_t >= MINE_Y_MAX:
+                    if not MineSweepData.in_area(x_t, y_t):
                         continue
                     # 判断中心
                     if x_t == x and y_t == y:
@@ -189,7 +193,7 @@ class MineSweepData:
             default_temp = []
             for x_t in range(x - 1, x + 2):
                 for y_t in range(y - 1, y + 2):
-                    if x_t < 0 or x_t >= MINE_X_MAX or y_t < 0 or y_t >= MINE_Y_MAX:
+                    if not MineSweepData.in_area(x_t, y_t):
                         continue
                     if FLAG_VALUE == self.data[x_t][y_t]['val']:
                         count_flag += 1
