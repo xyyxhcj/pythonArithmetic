@@ -21,6 +21,12 @@ SELECT_FG = 'snow'
 DEFAULT_FG = 'black'
 # 空区域颜色
 EMPTY_COLOR = 'white'
+# 全局盘面
+GLOBAL_BOARD = None
+# 延时
+DELAY = 300
+COLUMNS = 0
+ROWS = 0
 
 
 # 更新字典
@@ -28,6 +34,11 @@ def update(t_dict, y, x, value):
     if y not in t_dict:
         t_dict[y] = {}
     t_dict[y][x] = value
+
+
+# 判断是否越界
+def in_area(x, y):
+    return 0 <= x < COLUMNS and 0 <= y < ROWS
 
 
 # 每一局的数据
@@ -41,13 +52,6 @@ class GameData:
         board = Board(f.readlines())
         self.start_board = board
         f.close()
-        # 行数 lines长度
-        self.rows = board.rows
-        # 列数 line字符数
-        self.columns = board.columns
-
-    def in_area(self, x, y):
-        return 0 <= x < self.columns and 0 <= y < self.rows
 
     def solve(self):
         STACK.append(self.start_board)
@@ -67,7 +71,7 @@ class GameData:
         return False
 
     def is_win(self, board):
-        for y in range(self.rows):
+        for y in range(ROWS):
             for char in board.data[y]:
                 if EMPTY != char:
                     return False
@@ -84,30 +88,29 @@ class Board:
         self.swap_info = swap_info
         # 记录步数
         self.turn = turn
+        global ROWS, COLUMNS
         # 行数 lines长度
-        self.rows = len(lines)
+        ROWS = len(lines)
         # 列数 line字符数
-        self.columns = 0
+        COLUMNS = 0
         self.data = []
-        for y in range(self.rows):
+        for y in range(ROWS):
             line = []
             self.data.append(line)
             for x in range(len(lines[y])):
                 if '\n' != lines[y][x]:
                     line.append(lines[y][x])
-            if self.columns == 0:
-                self.columns = len(line)
+            if COLUMNS == 0:
+                COLUMNS = len(line)
 
-    def in_area(self, x, y):
-        return 0 <= x < self.columns and 0 <= y < self.rows
-
-    def swap(self, data, x, y, x_t, y_t):
-        if self.in_area(x, y) and self.in_area(x_t, y_t):
+    @staticmethod
+    def swap(data, x, y, x_t, y_t):
+        if in_area(x, y) and in_area(x_t, y_t):
             data[y][x], data[y_t][x_t] = data[y_t][x_t], data[y][x]
 
     def run(self, max_turn):
         # 遍历每个箱子
-        for y in range(self.rows):
+        for y in range(ROWS):
             for x, char in enumerate(self.data[y]):
                 if EMPTY != char:
                     # 移动,仅处理箱子
@@ -127,9 +130,10 @@ class Board:
                         swap_info = '(%d,%d) swap to (%d,%d)' % (x, y, x_t, y_t)
                         STACK.append(Board(data, self.turn + 1, self, swap_info))
 
-    def drop(self, data):
-        y = self.rows - 1
-        for x in range(self.columns):
+    @staticmethod
+    def drop(data):
+        y = ROWS - 1
+        for x in range(COLUMNS):
             # 对最底一行逐列遍历,处理每列的箱子掉落
             i, curr = y, y
             while i > 0:
@@ -139,18 +143,19 @@ class Board:
                     curr -= 1
                 i -= 1
 
-    def mark_clean(self, data):
+    @staticmethod
+    def mark_clean(data):
         # 存储已标记坐标
         marks = {}
         clean = False
         # 遍历每个箱子,向右方和下方各扫描两个箱子,如果重复则标记
-        for y in range(self.rows):
+        for y in range(ROWS):
             for x, char in enumerate(data[y]):
                 if EMPTY != char:
                     for i in range(1, len(NEXT)):
                         x2, y2 = x + NEXT[i][0], y + NEXT[i][1]
                         x3, y3 = x2 + NEXT[i][0], y2 + NEXT[i][1]
-                        if self.in_area(x2, y2) and self.in_area(x3, y3) and data[y2][x2] == data[y3][x3] == data[y][x]:
+                        if in_area(x2, y2) and in_area(x3, y3) and data[y2][x2] == data[y3][x3] == data[y][x]:
                             # 标记
                             update(marks, y, x, True)
                             update(marks, y2, x2, True)
@@ -214,9 +219,48 @@ class MoveTheBox(tkinter.Tk):
             # 如果位置相邻则交换,去除selected及前景色
             if abs(s_x - x) + abs(s_y - y) == 1:
                 self.swap_val_bg(x, y, s_x, s_y)
-                self.reset_fg(x, y)
-                self.reset_fg(s_x, s_y)
                 self.selected = None
+                # 循环掉落->消除
+                while True:
+                    self.drop()
+                    if not self.mark_clean():
+                        break
+
+    # 掉落
+    def drop(self):
+        y = len(self.show_data) - 1
+        for x, val in enumerate(self.show_data[y]):
+            # 对最底一行逐列遍历,处理每列的箱子掉落
+            i, curr = y, y
+            while i > 0:
+                if EMPTY != self.show_data[i][x]['val']:
+                    if curr != i:
+                        self.swap_val_bg(x, i, x, curr)
+                    curr -= 1
+                i -= 1
+
+    # 标记清除
+    def mark_clean(self):
+        marks = {}
+        clean = False
+        for y in range(len(self.show_data)):
+            for x, item in enumerate(self.show_data[y]):
+                if EMPTY != item['val']:
+                    for i in range(1, len(NEXT)):
+                        x2, y2 = x + NEXT[i][0], y + NEXT[i][1]
+                        x3, y3 = x2 + NEXT[i][0], y2 + NEXT[i][1]
+                        if in_area(x2, y2) and in_area(x3, y3) and self.show_data[y2][x2]['val'] \
+                                == self.show_data[y3][x3]['val'] == self.show_data[y][x]['val']:
+                            # 标记
+                            update(marks, y, x, True)
+                            update(marks, y2, x2, True)
+                            update(marks, y3, x3, True)
+                            clean = True
+        for y, mark_y in marks.items():
+            for x in mark_y:
+                self.show_data[y][x]['val'] = EMPTY
+                self.reset_fg(x, y)
+        return clean
 
     # 调整前景色
     def reset_fg(self, x, y):
@@ -224,6 +268,7 @@ class MoveTheBox(tkinter.Tk):
             self.show_data[y][x]['label']['fg'] = DEFAULT_FG
         else:
             self.show_data[y][x]['label']['fg'] = EMPTY_COLOR
+            self.show_data[y][x]['label']['bg'] = EMPTY_COLOR
 
     # 移位
     def swap_val_bg(self, x, y, x_t, y_t):
@@ -231,6 +276,12 @@ class MoveTheBox(tkinter.Tk):
                                                                        self.show_data[y_t][x_t]['val']
         self.show_data[y][x]['label']['bg'], self.show_data[y_t][x_t]['label']['bg'] = \
             self.show_data[y_t][x_t]['label']['bg'], self.show_data[y][x]['label']['bg']
+        self.reset_fg(x, y)
+        self.reset_fg(x_t, y_t)
+        self.show_data[y][x]['label'].update()
+        self.show_data[y_t][x_t]['label'].update()
+        self.show_data[y][x]['label'].after(DELAY)
+        self.show_data[y_t][x_t]['label'].after(DELAY)
 
 
 if __name__ == '__main__':
