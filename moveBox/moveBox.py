@@ -37,14 +37,15 @@ class GameData:
 
     def solve(self):
         STACK.append(self.start_board)
-        if self.try_solve():
-            print('win')
+        solve = self.try_solve()
+        if solve:
+            solve.print_log()
 
     def try_solve(self):
         while len(STACK) > 0:
             board = STACK.pop()
             if self.is_win(board):
-                return True
+                return board
             if board.turn == self.max_turn:
                 continue
             else:
@@ -62,7 +63,11 @@ class GameData:
 # 每一步的盘面
 class Board:
     # 初始化盘面
-    def __init__(self, lines: [], turn=0) -> None:
+    def __init__(self, lines: [], turn=0, pre_board=None, swap_info='') -> None:
+        # 存储上一步
+        self.pre_board = pre_board
+        # 存储交换信息
+        self.swap_info = swap_info
         # 记录步数
         self.turn = turn
         # 行数 lines长度
@@ -105,7 +110,8 @@ class Board:
                             # 标记+消除
                             if not self.mark_clean(data):
                                 break
-                        STACK.append(Board(data, self.turn + 1))
+                        swap_info = '(%d,%d) swap to (%d,%d)' % (x, y, x_t, y_t)
+                        STACK.append(Board(data, self.turn + 1, self, swap_info))
 
     def drop(self, data):
         y = self.rows - 1
@@ -145,6 +151,11 @@ class Board:
     def print(self):
         for y in range(self.rows):
             print(str(self.data[y]))
+
+    def print_log(self):
+        if self.pre_board is not None:
+            self.pre_board.print_log()
+        print(self.swap_info)
 
 
 if __name__ == '__main__':
