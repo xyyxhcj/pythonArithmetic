@@ -24,7 +24,7 @@ EMPTY_COLOR = 'white'
 # 全局盘面
 GLOBAL_BOARD = None
 # 延时
-DELAY = 300
+DELAY = 100
 COLUMNS = 0
 ROWS = 0
 
@@ -260,6 +260,8 @@ class MoveTheBox(tkinter.Tk):
             for x in mark_y:
                 self.show_data[y][x]['val'] = EMPTY
                 self.reset_fg(x, y)
+                self.show_data[y][x]['label'].update()
+                self.show_data[y][x]['label'].after(DELAY)
         return clean
 
     # 调整前景色
@@ -285,6 +287,7 @@ class MoveTheBox(tkinter.Tk):
 
 
 if __name__ == '__main__':
-    game_data = GameData('boston_09.txt')
+    # game_data = GameData('boston_09.txt')
+    game_data = GameData('boston_16.txt')
     game_data.solve()
     game_data.start_board.print()
