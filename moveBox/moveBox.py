@@ -1,12 +1,19 @@
-# 配置
-# 空位
 import copy
+import tkinter
 
+# 配置
+LABEL_WIDTH = 5
+LABEL_HEIGHT = 2
+# 空位
 EMPTY = '.'
 # 3个方向移位时x,y坐标变更值
 NEXT = [(-1, 0), (1, 0), (0, 1)]
 # 使用栈遍历
 STACK = []
+# 箱子颜色
+COLORS = ['yellow', 'Pink', 'Plum', 'Navy', 'Cyan', 'Teal', 'Olive', 'Gold', 'Tan', 'Coral']
+# 存储不同字符对应的颜色
+COLOR_DICT = {}
 
 
 # 更新字典
@@ -38,8 +45,8 @@ class GameData:
     def solve(self):
         STACK.append(self.start_board)
         solve = self.try_solve()
-        if solve:
-            solve.print_log()
+        if isinstance(solve, Board):
+            solve.swap_log()
 
     def try_solve(self):
         while len(STACK) > 0:
@@ -149,16 +156,35 @@ class Board:
         return clean
 
     def print(self):
-        for y in range(self.rows):
-            print(str(self.data[y]))
+        # 可视化
+        MoveTheBox(self.data, class_name='move box').mainloop()
 
-    def print_log(self):
+    def swap_log(self):
         if self.pre_board is not None:
-            self.pre_board.print_log()
+            self.pre_board.swap_log()
         print(self.swap_info)
+
+
+class MoveTheBox(tkinter.Tk):
+
+    def __init__(self, data, class_name):
+        super().__init__(class_name)
+        # 初始化展示数据
+        for y in range(len(data)):
+            for x in range(len(data[y])):
+                color = 'white'
+                text = ''
+                val = data[y][x]
+                if EMPTY != val:
+                    if val not in COLOR_DICT:
+                        COLOR_DICT[val] = COLORS.pop()
+                    color = COLOR_DICT[val]
+                    text = '%d_%d' % (x, y)
+                label = tkinter.Label(self, text=text, width=LABEL_WIDTH, height=LABEL_HEIGHT, bg=color)
+                label.grid(row=y, column=x)
 
 
 if __name__ == '__main__':
     game_data = GameData('boston_09.txt')
-    game_data.start_board.print()
     game_data.solve()
+    game_data.start_board.print()
