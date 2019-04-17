@@ -67,10 +67,11 @@ class GameData:
             if board.turn == self.max_turn:
                 continue
             else:
-                board.run(self.max_turn)
+                board.run()
         return False
 
-    def is_win(self, board):
+    @staticmethod
+    def is_win(board):
         for y in range(ROWS):
             for char in board.data[y]:
                 if EMPTY != char:
@@ -108,7 +109,7 @@ class Board:
         if in_area(x, y) and in_area(x_t, y_t):
             data[y][x], data[y_t][x_t] = data[y_t][x_t], data[y][x]
 
-    def run(self, max_turn):
+    def run(self):
         # 遍历每个箱子
         for y in range(ROWS):
             for x, char in enumerate(self.data[y]):
@@ -127,7 +128,7 @@ class Board:
                             # 标记+消除
                             if not self.mark_clean(data):
                                 break
-                        swap_info = '(%d,%d) swap to (%d,%d)' % (x, y, x_t, y_t)
+                        swap_info = '(%d_%d) swap to (%d_%d)' % (x, y, x_t, y_t)
                         STACK.append(Board(data, self.turn + 1, self, swap_info))
 
     @staticmethod
