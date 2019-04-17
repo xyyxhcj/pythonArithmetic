@@ -27,6 +27,8 @@ GLOBAL_BOARD = None
 DELAY = 100
 COLUMNS = 0
 ROWS = 0
+# 通过查找表记录状态,避免重复搜索
+BOARD_SET = set()
 
 
 # 更新字典
@@ -58,6 +60,8 @@ class GameData:
         solve = self.try_solve()
         if isinstance(solve, Board):
             solve.swap_log()
+        else:
+            print('not result')
 
     def try_solve(self):
         while len(STACK) > 0:
@@ -118,7 +122,7 @@ class Board:
                     for i, (move_x, move_y) in enumerate(NEXT):
                         x_t, y_t = x + move_x, y + move_y
                         # 与左右下交换,如果左方为箱子时不处理,
-                        if i == 0 and EMPTY == self.data[y_t][x_t]:
+                        if i == 0 and EMPTY != self.data[y_t][x_t]:
                             continue
                         data = copy.deepcopy(self.data)
                         self.swap(data, x, y, x_t, y_t)
@@ -129,7 +133,27 @@ class Board:
                             if not self.mark_clean(data):
                                 break
                         swap_info = '(%d_%d) swap to (%d_%d)' % (x, y, x_t, y_t)
-                        STACK.append(Board(data, self.turn + 1, self, swap_info))
+                        next_board = Board(data, self.turn + 1, self, swap_info)
+                        # 使用查找表记录状态,避免重复搜索
+                        if next_board not in BOARD_SET:
+                            BOARD_SET.add(next_board)
+                            # 如果有某一个箱子局面数量少于3个,则表示此路不通,不再加入栈
+                            #  存储1个和两个的箱子集合,已扫描的字符集合
+                            singles, duals, check_set = set(), set(), set()
+                            for n_y in range(ROWS):
+                                for n_x, c in enumerate(data[n_y]):
+                                    if EMPTY == c:
+                                        continue
+                                    if c not in check_set:
+                                        check_set.add(c)
+                                        singles.add(c)
+                                    elif c in singles:
+                                        singles.remove(c)
+                                        duals.add(c)
+                                    elif c in duals:
+                                        duals.remove(c)
+                            if len(singles) == 0 and len(duals) == 0:
+                                STACK.append(next_board)
 
     @staticmethod
     def drop(data):
@@ -176,6 +200,18 @@ class Board:
         if self.pre_board is not None:
             self.pre_board.swap_log()
         print(self.swap_info)
+
+    # 重写_hash_ _eq_方法,将每次获取的局面存入查找表set,通过查找表记录状态，避免重复搜索
+    def __hash__(self) -> int:
+        key = ''
+        for y in range(ROWS):
+            key += '_'.join(self.data[y]) + ','
+        return key.__hash__()
+
+    def __eq__(self, o: object) -> bool:
+        if isinstance(o, self.__class__):
+            return self.__hash__() == o.__hash__()
+        return False
 
 
 class MoveTheBox(tkinter.Tk):
@@ -290,5 +326,6 @@ class MoveTheBox(tkinter.Tk):
 if __name__ == '__main__':
     # game_data = GameData('boston_09.txt')
     game_data = GameData('boston_16.txt')
+    # game_data = GameData('boston_test.txt')
     game_data.solve()
     game_data.start_board.print()
