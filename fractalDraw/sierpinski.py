@@ -13,7 +13,7 @@ class DrawSudoku(tkinter.Tk):
         x2 = width + OFFSET
         y2 = height + OFFSET
         super().__init__(className=class_name)
-        # 计算停止递归的连长
+        # 计算停止递归的边长
         min_length = self.get_min(depth)
         self.geometry('%dx%d' % (x2 + OFFSET, y2 + OFFSET))
         self.canvas = tkinter.Canvas(self, width=width, height=height)
