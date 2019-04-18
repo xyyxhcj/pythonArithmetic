@@ -11,7 +11,7 @@ class DrawCircle(tkinter.Tk):
         self.height = height
         x2 = width + OFFSET
         y2 = height + OFFSET
-        super().__init__(class_name)
+        super().__init__(className=class_name)
         self.geometry('%dx%d' % (x2 + OFFSET, y2 + OFFSET))
         self.canvas = tkinter.Canvas(self, width=width, height=height)
         self.bind('<Key>', self.redraw)
