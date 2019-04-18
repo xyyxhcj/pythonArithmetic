@@ -12,7 +12,7 @@ class DrawSudoku(tkinter.Tk):
         self.height = height
         x2 = width + OFFSET
         y2 = height + OFFSET
-        super().__init__(class_name)
+        super().__init__(className=class_name)
         # 计算停止递归的连长
         min_length = self.get_min(depth)
         self.geometry('%dx%d' % (x2 + OFFSET, y2 + OFFSET))
@@ -50,13 +50,13 @@ class DrawSudoku(tkinter.Tk):
             # 填充最后的点
             canvas.create_rectangle(start_x, start_y, end_x, end_y, fill='lightblue', width=0)
             return
-        # 画出中间的格子
-        canvas.create_rectangle(start_x + width, start_y + height, end_x - width, end_y - height, fill='lightblue',
-                                width=0)
+        # 画出中间的格子,或者将中间格子也加入递归绘制
+        # canvas.create_rectangle(start_x + width, start_y + height, end_x - width, end_y - height, fill='lightblue',
+        #                         width=0)
 
         # 四个角坐标开始xy,结束xy的计算距离
-        count_next = [[0, 0, width, height], [width * 2, 0, width * 3, height], [0, height * 2, width, height * 3],
-                      [width * 2, height * 2, width * 3, height * 3]]
+        count_next = [[0, 0, width, height], [width * 2, 0, width * 3, height], [width, height, width * 2, height * 2],
+                      [0, height * 2, width, height * 3], [width * 2, height * 2, width * 3, height * 3]]
         # 递归画四个角
         for item in count_next:
             self.draw(canvas, start_x + item[0], start_y + item[1], start_x + item[2], start_y + item[3], min_length)
