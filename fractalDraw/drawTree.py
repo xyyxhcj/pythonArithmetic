@@ -50,7 +50,7 @@ class DrawTree(tkinter.Tk):
         end_y = start_y - line * math.sin(math.radians(angle))
         if line <= min_length:
             # 连线
-            canvas.create_line(start_x, start_y, end_x, end_y)
+            canvas.create_line(start_x, start_y, end_x, end_y, width=2, fill='snow')
         else:
             # a结点坐标
             a_x, a_y = start_x + (end_x - start_x) * TRUNK_LENGTH, start_y + (end_y - start_y) * TRUNK_LENGTH
@@ -58,7 +58,7 @@ class DrawTree(tkinter.Tk):
             #     math.radians(angle + ANGLE))
             # c_x, c_y = a_x - line * math.cos(math.radians(angle + ANGLE)), a_y - line * math.sin(
             #     math.radians(angle + ANGLE))
-            canvas.create_line(start_x, start_y, a_x, a_y)
+            canvas.create_line(start_x, start_y, a_x, a_y, width=2, fill='snow')
             # 分叉点
             self.draw(canvas, a_x, a_y, line * (1 - TRUNK_LENGTH), angle + ANGLE, min_length)
             self.draw(canvas, a_x, a_y, line * (1 - TRUNK_LENGTH), angle - ANGLE, min_length)
