@@ -24,7 +24,7 @@ class DrawSudoku(tkinter.Tk):
 
     def get_min(self, depth):
         math_pow = math.pow(2, depth)
-        min_length = max(self.length // math_pow, 2)
+        min_length = max(self.length / math_pow, 2)
         print('min_length:%d' % min_length)
         return min_length
 

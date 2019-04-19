@@ -1,4 +1,4 @@
-# 切分九宫格,只填充中心及四角
+# 切分九宫格,填充中心,递归八个方向
 import tkinter
 
 import math
@@ -47,15 +47,15 @@ class DrawSudoku(tkinter.Tk):
         width = (end_x - start_x) / 3
         height = (end_y - start_y) / 3
         if width < min_length or height < min_length:
-            # 填充最后的点
-            canvas.create_rectangle(start_x, start_y, end_x, end_y, fill='lightblue', width=0)
             return
-        # 画出中间的格子
+        # 填充中间的格子
         canvas.create_rectangle(start_x + width, start_y + height, end_x - width, end_y - height, fill='lightblue',
                                 width=0)
 
         # 四个角坐标开始xy,结束xy的计算距离
-        count_next = [[0, 0, width, height], [width * 2, 0, width * 3, height], [0, height * 2, width, height * 3],
+        count_next = [[0, 0, width, height], [width, 0, width * 2, height], [width * 2, 0, width * 3, height],
+                      [0, height, width, height * 2], [width * 2, height, width * 3, height * 2],
+                      [0, height * 2, width, height * 3], [width, height * 2, width * 2, height * 3],
                       [width * 2, height * 2, width * 3, height * 3]]
         # 递归画四个角
         for item in count_next:

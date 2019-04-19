@@ -1,4 +1,4 @@
-# 切分九宫格,只填充中心及四角
+# 切分九宫格,递归中心及四角
 import tkinter
 
 import math
