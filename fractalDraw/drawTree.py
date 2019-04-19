@@ -1,4 +1,5 @@
 # 递归画树
+import random
 import tkinter
 
 import math
@@ -59,9 +60,9 @@ class DrawTree(tkinter.Tk):
             # c_x, c_y = a_x - line * math.cos(math.radians(angle + ANGLE)), a_y - line * math.sin(
             #     math.radians(angle + ANGLE))
             canvas.create_line(start_x, start_y, a_x, a_y, width=2, fill='snow')
-            # 分叉点
-            self.draw(canvas, a_x, a_y, line * (1 - TRUNK_LENGTH), angle + ANGLE, min_length)
-            self.draw(canvas, a_x, a_y, line * (1 - TRUNK_LENGTH), angle - ANGLE, min_length)
+            # 添加随机角度 random.randint(-25, 15)
+            self.draw(canvas, a_x, a_y, line * (1 - TRUNK_LENGTH), angle + ANGLE + random.randint(-25, 25), min_length)
+            self.draw(canvas, a_x, a_y, line * (1 - TRUNK_LENGTH), angle - ANGLE + random.randint(-25, 25), min_length)
 
 
 def main():
