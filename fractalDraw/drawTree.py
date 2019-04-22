@@ -6,7 +6,7 @@ import math
 
 OFFSET = 5
 # 分叉角度
-ANGLE = 45
+ANGLE = 35
 # 取多少为树干
 TRUNK_LENGTH = 2 / 5
 
