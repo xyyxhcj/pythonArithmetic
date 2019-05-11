@@ -31,7 +31,7 @@ class Tree:
 			self.itemList[0].index = -1
 			self.itemList[0] = item
 			item.index = 0
-			self.collating_from_top()
+			self.collating_from_top(item)
 
 	# 整理堆
 	def collating(self, item):
