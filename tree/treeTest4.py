@@ -1,4 +1,4 @@
-# 查前K个高频元素 python3自带的排序
+# 查前K个高频元素 python3自带的排序N*logN
 # https://leetcode-cn.com/problems/top-k-frequent-elements/
 from typing import List
 

@@ -1,4 +1,4 @@
-# 查前K个高频元素 nlogK
+# 查前K个高频元素 nlogn/2
 # https://leetcode-cn.com/problems/top-k-frequent-elements/
 from typing import List
 
