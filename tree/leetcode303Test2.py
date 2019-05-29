@@ -6,11 +6,12 @@ class NumArray(object):
         """
         # 遍历,在每个结点中存储索引0到当前索引的和
         self.nums = nums
-        total = 0
-        self.totals = []
-        for num in nums:
-            total += num
-            self.totals.append(total)
+        self.total = 0
+        # self.totals = []
+        # for num in nums:
+        #     total += num
+        #     self.totals.append(total)
+        self.totals = [self.sum(num) for num in nums]
 
     def sumRange(self, i, j):
         """
@@ -19,6 +20,10 @@ class NumArray(object):
         :rtype: int
         """
         return self.totals[j] - self.totals[i] + self.nums[i]
+
+    def sum(self, num):
+        self.total += num
+        return self.total
 
 
 if __name__ == '__main__':
