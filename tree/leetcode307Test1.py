@@ -17,6 +17,7 @@ class NumArray:
         self.update_parent(temp, tree_index)
 
     def update_parent(self, temp, tree_index):
+        # 自底向上更新树节点存储的值
         if temp != 0:
             while tree_index >= 0:
                 self.tree[tree_index] += temp
@@ -30,11 +31,13 @@ class NumArray:
             return
         if l_index == r_index:
             self.tree[tree_index] = self.nums[l_index]['data']
+            # 在数组中存储元素在树中的索引,方便进行更新操作
             self.nums[l_index]['t_index'] = tree_index
             return
         mid = (l_index + r_index) >> 1
         l_child = (tree_index << 1) + 1
         r_child = l_child + 1
+        # 构建左子树和右子树,并存储左右子树之和
         self.buildSegmentTree(l_child, l_index, mid)
         self.buildSegmentTree(r_child, mid + 1, r_index)
         self.tree[tree_index] = self.tree[l_child] + self.tree[r_child]
@@ -46,8 +49,10 @@ class NumArray:
         r_child = l_child + 1
         mid = (l_index + r_index) >> 1
         if mid < query_l:
+            # 元素在右子树中
             return self.query(r_child, mid + 1, r_index, query_l, query_r)
         elif mid >= query_r:
+            # 元素在左子树中
             return self.query(l_child, l_index, mid, query_l, query_r)
         else:
             # 数据分布在左子树与右子树间
