@@ -34,7 +34,7 @@ class WordDictionary:
         queue = deque([{'node': self.root, 'index': 0}])
         length = len(word)
         while len(queue) > 0:
-            pop = queue.popleft()
+            pop = queue.pop()
             node = pop['node']
             index = pop['index']
             if index == length:
@@ -46,9 +46,8 @@ class WordDictionary:
             if c == '.':
                 for n in node.next.values():
                     queue.append({'node': n, 'index': index + 1})
-            else:
-                if c in node.next:
-                    queue.append({'node': node.next[c], 'index': index + 1})
+            elif c in node.next:
+                queue.append({'node': node.next[c], 'index': index + 1})
         return False
 
 # Your WordDictionary object will be instantiated and called as such:
