@@ -1,20 +1,18 @@
 class Solution:
     def longestConsecutive(self, nums):
-        longest_streak = 0
+        # 记录最长序列
+        longest_sequence = 0
         num_set = {num for num in nums}
-
-        for num in num_set:
+        for num in nums:
             if num - 1 not in num_set:
-                current_num = num
-                current_streak = 1
-
-                while current_num + 1 in num_set:
-                    current_num += 1
-                    current_streak += 1
-
-                longest_streak = max(longest_streak, current_streak)
-
-        return longest_streak
+                # 仅对一个序列中的最小元素进行穷举，获取序列长度
+                sequence = 1
+                while num + 1 in num_set:
+                    num += 1
+                    sequence += 1
+                if sequence > longest_sequence:
+                    longest_sequence = sequence
+        return longest_sequence
 
 
 if __name__ == '__main__':
