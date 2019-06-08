@@ -41,9 +41,9 @@ class AvlTree:
         self.root = None
         self.add_lambda = {
             # 改为对left/right 赋值
-            1: lambda tree, curr, node: tree.__add_node(curr.left, node),
-            -1: lambda tree, curr, node: tree.__add_node(curr.right, node),
-            0: lambda tree, curr, node: curr.add_count(1)
+            1: lambda  curr, node: self.__add_node(curr.left, node),
+            -1: lambda curr, node: self.__add_node(curr.right, node),
+            0: lambda curr, node: curr.add_count(1)
         }
 
     def add_node(self, node: Node):
@@ -59,11 +59,11 @@ class AvlTree:
         else:
             compare = curr.compare(node)
             if compare == 1:
-                curr.left = self.add_lambda[compare](self, curr, node)
+                curr.left = self.add_lambda[compare](curr, node)
             elif compare == -1:
-                curr.right = self.add_lambda[compare](self, curr, node)
+                curr.right = self.add_lambda[compare](curr, node)
             else:
-                self.add_lambda[compare](self, curr, node)
+                self.add_lambda[compare](curr, node)
             return curr
 
     def __str__(self) -> str:
