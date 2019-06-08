@@ -1,6 +1,8 @@
 import random
 import tkinter
 
+import math
+
 
 class Node:
 
@@ -46,13 +48,15 @@ class Node:
         return concat_str
 
     # 以前序遍历的方式将节点放入list
-    def push_arr(self, parent=None) -> list:
+    def push_arr(self, parent=None, sub_type=None, tree_level=1) -> list:
         self.parent = parent
+        self.sub_type = sub_type
+        self.tree_level = tree_level
         arr = [self]
         if self.left is not None:
-            arr += self.left.push_arr(self)
+            arr += self.left.push_arr(self, 'L', tree_level + 1)
         if self.right is not None:
-            arr += self.right.push_arr(self)
+            arr += self.right.push_arr(self, 'R', tree_level + 1)
         return arr
 
 
@@ -184,37 +188,46 @@ class DrawTree(tkinter.Tk):
     def draw(self, canvas, avl_tree: AvlTree):
         # 将树的结点存为数组
         arr = avl_tree.push_arr()
-        offset = 5
-        node_height = 30
+        offset = 10
+        node_height = 90
         node_width = 30
         mid = self.width / 2
-        # 根结点
-        root = avl_tree.root
-        canvas.create_oval(mid - node_width / 2, offset, mid + node_width / 2, offset + node_height, fill='lightblue')
-        tkinter.Label(canvas, text=root.data).pack()
+        font = ('Couried', 15)
+        for node in arr:
+            if node.parent is None:
+                # 根结点
+                # canvas.create_oval(mid - node_width / 2, offset, mid + node_width / 2, offset + node_height,
+                #                    fill='lightblue')
+                node.x, node.y = mid - node_width / 2, offset
+                canvas.create_text(node.x, node.y, text=node.data, font=font)
+            else:
+                # 求当前层节点数,第i层的结点总数不超过 Math.pow(2,i)
+                max_nodes = math.pow(2, node.tree_level - 2)
+                # 根据当前层节点数计算x坐标每个节点的位移量
+                x_distance = int(self.width // max_nodes - offset) >> 2
+                # 根据父节点计算坐标
+                parent_x, parent_y = node.parent.x, node.parent.y
+                if node.sub_type == 'L':
+                    # 左结点
+                    node.x, node.y = parent_x - x_distance, parent_y + node_height
+                else:
+                    # 右结点
+                    node.x, node.y = parent_x + x_distance, parent_y + node_height
+                canvas.create_line(parent_x, parent_y, node.x, node.y, fill='red')
+                canvas.create_text(node.x, node.y, text=node.data, font=font)
 
-        # 通过父节点动态计算坐标,并连线
+                # tkinter.Label(canvas, text=node.data).pack()
         self.mainloop()
-        # if step < 3:
-        #     step = 3
-        # if start_x > end_x or start_y > end_y:
-        #     self.mainloop()
-        #     return
-        # if depth % 2 == 0:
-        #     canvas.create_oval(start_x, start_y, end_x, end_y, fill='lightblue', width=2)
-        # else:
-        #     canvas.create_oval(start_x, start_y, end_x, end_y, fill='Violet', width=2)
-        # self.draw(canvas, start_x + step, start_y + step, end_x - step, end_y - step, step, depth + 1)
 
 
 if __name__ == '__main__':
     tree = AvlTree()
-    for i in range(10):
-        tree.add_node(Node(random.randint(0, 15)))
+    for i in range(30):
+        tree.add_node(Node(random.randint(0, 50)))
     # for i in [1, 6, 12, 12, 3, 9, 4, 12, 7, 6]:
     #     tree.add_node(Node(i))
     print(tree)
     print(tree.inorder_traversal())
     print(tree.is_avl())
+    # 根据树的层级计算宽度/间隔->画出树
     DrawTree('avlTree', 800, 600, tree)
-    # TODO 根据树的层级计算宽度/间隔->构造树形图
