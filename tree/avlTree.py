@@ -64,6 +64,7 @@ class AvlTree:
 
     def __init__(self) -> None:
         self.root = None
+        self.size = 0
 
     # 获取平衡因子
     def get_balance_factor(self, node: Node):
@@ -83,6 +84,7 @@ class AvlTree:
         return 0 if node is None else node.level
 
     def add_node(self, node: Node):
+        self.size += 1
         if self.root is None:
             self.root = node
         else:
@@ -101,27 +103,91 @@ class AvlTree:
             else:
                 curr = curr.add_count(1)
             # 计算层级
-            curr.level = max(self.get_height(curr.left), self.get_height(curr.right)) + 1
-            # 平衡因子绝对值大于1时,进行左旋/右旋
-            if abs(self.get_balance_factor(curr)) > 1:
-                if self.get_balance_factor(curr) > 1 and self.get_balance_factor(curr.left) > 0:
-                    # 左子树高,且左节点的左子树高,进行右旋 RR
-                    curr = self.right_rotate(curr)
-                elif self.get_balance_factor(curr) < 1 and self.get_balance_factor(curr.right) < 0:
-                    # 右子树高,且右节点的右子树高,进行左旋 LL
-                    curr = self.left_rotate(curr)
-                elif self.get_balance_factor(curr) > 1 and self.get_balance_factor(curr.left) < 0:
-                    # 左子树高,且左节点的右子树高,左节点先左旋父结点再右旋 LR
-                    curr.left = self.left_rotate(curr.left)
-                    curr = self.right_rotate(curr)
-                elif self.get_balance_factor(curr) < 1 and self.get_balance_factor(curr.right) > 0:
-                    # 右子树高,且右节点的左子树高,右节点先右旋父结点再左旋 RL
-                    curr.right = self.right_rotate(curr.right)
-                    curr = self.left_rotate(curr)
+            curr = self.recount_level(curr)
             return curr
 
+    def remove_data(self, data):
+        self.root = self.remove_node(data, self.root)
+
+    def remove_node(self, data, node):
+        if node is None:
+            return None
+        result_node = node
+        if data < node.data:
+            node.left = self.remove_node(data, node.left)
+            # node = self.recount_level(node)
+        elif data > node.data:
+            node.right = self.remove_node(data, node.right)
+            # node = self.recount_level(node)
+        if data == node.data:
+            # 删除节点
+            if node.left is None:
+                # 左结点为空时,用右结点替换被删除的结点
+                result_node = node.right
+            elif node.right is None:
+                result_node = node.left
+            else:
+                # 左右均有结点,获取右子树中的最小值->替换被删除的结点
+                min_node = self.get_min(node.right)
+                min_node.right = self.remove_node(min_node.data, node.right)
+                # 将替换的元素扣减的长度加回来
+                self.size += min_node.count
+                min_node.left = node.left
+                # 整理右子树
+                # if min_node.right is not None:
+                #     min_node.right = self.recount_level(min_node.right)
+                result_node = min_node
+            self.size -= node.count
+        # 重算高度
+        if result_node is not None:
+            result_node = self.recount_level(result_node)
+        return result_node
+
+    # 添加/删除元素后将树整理为平衡二叉树
+    def recount_level(self, result_node):
+        result_node.level = max(self.get_height(result_node.left), self.get_height(result_node.right)) + 1
+        balance_factor = self.get_balance_factor(result_node)
+        if abs(balance_factor) > 1:
+            # RR LL时 符号必须为大于或等于，否则当左/右子树高且子结点平衡时无法继续整理
+            if balance_factor > 1 and self.get_balance_factor(result_node.left) >= 0:
+                # 左子树高,且左节点的左子树大于等于右子树,进行右旋 RR
+                result_node = self.right_rotate(result_node)
+            elif balance_factor < -1 and self.get_balance_factor(result_node.right) <= 0:
+                # 右子树高,且右节点的右子树大于等于左子树高,进行左旋 LL
+                result_node = self.left_rotate(result_node)
+            elif balance_factor > 1 and self.get_balance_factor(result_node.left) < 0:
+                # 左子树高,且左节点的右子树高,左节点先左旋父结点再右旋 LR
+                result_node.left = self.left_rotate(result_node.left)
+                result_node = self.right_rotate(result_node)
+            elif balance_factor < -1 and self.get_balance_factor(result_node.right) > 0:
+                # 右子树高,且右节点的左子树高,右节点先右旋父结点再左旋 RL
+                result_node.right = self.right_rotate(result_node.right)
+                result_node = self.left_rotate(result_node)
+        return result_node
+
+    # 获取子树中的最小结点
+    def get_min(self, node):
+        if node.left is None:
+            # 当不存在左结点时 即为最小值
+            return node
+        return self.get_min(node.left)
+
+    # 查找结点
+    def find_data(self, data):
+        return self.find_node(data, self.root)
+
+    def find_node(self, data, node: Node):
+        if node is None:
+            return None
+        if data == node.data:
+            return node
+        elif data < node.data:
+            return self.find_node(data, node.left)
+        elif data > node.data:
+            return self.find_node(data, node.right)
+
     def __str__(self) -> str:
-        return str(self.root)
+        return 'size:%s\n%s' % (self.size, str(self.root))
 
     def inorder_traversal(self):
         # 中序遍历
@@ -136,7 +202,6 @@ class AvlTree:
     #    z   T3                       T1  T2 T3 T4
     #   / \
     # T1   T2
-
     @staticmethod
     def right_rotate(y) -> Node:
         x = y.left
@@ -216,18 +281,30 @@ class DrawTree(tkinter.Tk):
                 canvas.create_line(parent_x, parent_y, node.x, node.y, fill='red')
                 canvas.create_text(node.x, node.y, text=node.data, font=font)
 
-                # tkinter.Label(canvas, text=node.data).pack()
         self.mainloop()
 
 
 if __name__ == '__main__':
     tree = AvlTree()
+    temp = []
     for i in range(30):
-        tree.add_node(Node(random.randint(0, 50)))
-    # for i in [1, 6, 12, 12, 3, 9, 4, 12, 7, 6]:
+        randint = random.randint(0, 50)
+        temp.append(randint)
+        tree.add_node(Node(randint))
+    print(temp)
+    # for i in [27, 7, 23, 36, 45, 40, 23, 12, 18, 6, 44, 22, 13, 21, 21, 6, 0, 20, 37, 11, 15, 6, 47, 32, 25, 14, 17, 32, 10, 12]:
     #     tree.add_node(Node(i))
     print(tree)
     print(tree.inorder_traversal())
     print(tree.is_avl())
     # 根据树的层级计算宽度/间隔->画出树
     DrawTree('avlTree', 800, 600, tree)
+    # 删除10-15
+    for i in range(10, 16, 1):
+        if tree.find_data(i) is not None:
+            tree.remove_data(i)
+            # DrawTree('avlTree', 800, 600, tree)
+    print(tree)
+    print(tree.is_avl())
+    DrawTree('avlTree', 800, 600, tree)
+    # [31, 14, 42, 50, 30, 36, 7, 30, 38, 25, 46, 8, 2, 7, 45, 34, 31, 15, 3, 7, 7, 18, 11, 27, 5, 6, 24, 32, 46, 31]
