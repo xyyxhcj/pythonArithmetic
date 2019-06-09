@@ -133,9 +133,6 @@ class AvlTree:
                 # 将替换的元素扣减的长度加回来
                 self.size += min_node.count
                 min_node.left = node.left
-                # 整理右子树
-                # if min_node.right is not None:
-                #     min_node.right = self.recount_level(min_node.right)
                 result_node = min_node
             self.size -= node.count
         # 重算高度
