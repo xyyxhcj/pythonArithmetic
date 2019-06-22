@@ -135,7 +135,7 @@ class TwoThreeTree:
                 tree_node = self.split_tree_node(tree_node)
                 if len(tree_node.nodes) == 1 and parent is not None:
                     # 返回的为拆分后的父结点，与上一级继续融合
-                    tree_node.parent = self.merge(compare_tree_node, tree_node)
+                    tree_node.parent = self.merge(tree_node.parent.compare(tree_node.nodes[0]), tree_node)
         if parent is None:
             return tree_node
         else:
@@ -207,11 +207,11 @@ class DrawTree(tkinter.Tk):
     def draw(self, canvas, ttTree: TwoThreeTree):
         # 将树的结点存为数组
         arr = ttTree.push_arr()
-        offset = 10
+        offset = 15
         node_height = 90
         node_width = 30
         mid = self.width / 2
-        font = ('Couried', 15)
+        font = ('Couried', 14)
         for tree_node in arr:
             node_text = ''
             for node in tree_node.nodes:
@@ -231,10 +231,10 @@ class DrawTree(tkinter.Tk):
                 parent_x, parent_y = tree_node.parent.x, tree_node.parent.y
                 if tree_node.sub_type == 0:
                     # 左结点
-                    tree_node.x, tree_node.y = parent_x - x_distance, parent_y + node_height
+                    tree_node.x, tree_node.y = parent_x - x_distance + offset*2, parent_y + node_height
                 elif tree_node.sub_type == 2:
                     # 右结点
-                    tree_node.x, tree_node.y = parent_x + x_distance, parent_y + node_height
+                    tree_node.x, tree_node.y = parent_x + x_distance - offset*2, parent_y + node_height
                 else:
                     # 中结点
                     tree_node.x, tree_node.y = parent_x, parent_y + node_height
@@ -245,12 +245,12 @@ class DrawTree(tkinter.Tk):
 
 if __name__ == '__main__':
     tree = TwoThreeTree()
-    # for i in [8,8,1,3,3]:
-    for i in range(10):
+    # for i in [10, 1, 6, 0, 9, 7, 0, 8, 9, 8]:
+    for i in range(20):
         # tree.add_node(Node(i))
         # DrawTree('tree', 800, 600, tree)
-        tree.add_node(Node(i))
-        randint = random.randint(0, 10)
+        # tree.add_node(Node(i))
+        randint = random.randint(0, 15)
         print(randint)
         tree.add_node(Node(randint))
     print(tree)
