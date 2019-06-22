@@ -1,4 +1,5 @@
 # 二三树
+import random
 import tkinter
 
 import math
@@ -18,9 +19,9 @@ class Node:
         self.count = 1
 
     def compare(self, other) -> int:
-        if other.data < self.data:
+        if self.data < other.data:
             return -1
-        elif other.data > self.data:
+        elif self.data > other.data:
             return 1
         else:
             return 0
@@ -40,19 +41,25 @@ class TreeNode:
         self.child_list = [None] * 4
 
     def compare(self, other: Node):
-        compare = other.compare(self.nodes[0])
-        if compare == -1:
-            return CONSTANT['LESS']
+        compare = self.nodes[0].compare(other)
+        # compare = other.compare(self.nodes[0])
+        if compare == 1:
+            # 第一个结点大于新结点
+            return CONSTANT['GREATER']
         elif compare == 0:
             return CONSTANT['LEFT']
         elif len(self.nodes) == 1:
-            return CONSTANT['GREATER']
-        compare = other.compare(self.nodes[1])
-        if compare == 1:
-            return CONSTANT['GREATER']
+            # 第一个结点小于新结点，无第二个结点
+            return CONSTANT['LESS']
+        compare = self.nodes[1].compare(other)
+        # compare = other.compare(self.nodes[1])
+        if compare == -1:
+            # 第二个结点小于新结点
+            return CONSTANT['LESS']
         elif compare == 0:
             return CONSTANT['RIGHT']
         else:
+            # 第二个结点大于新结点
             return CONSTANT['MIDDLE']
 
     def __str__(self) -> str:
@@ -238,11 +245,14 @@ class DrawTree(tkinter.Tk):
 
 if __name__ == '__main__':
     tree = TwoThreeTree()
-    for i in range(5):
+    # for i in [8,8,1,3,3]:
+    for i in range(10):
+        # tree.add_node(Node(i))
+        # DrawTree('tree', 800, 600, tree)
         tree.add_node(Node(i))
-        # randint = random.randint(0, 10)
-        # print(randint)
-        # tree.add_node(Node(randint))
+        randint = random.randint(0, 10)
+        print(randint)
+        tree.add_node(Node(randint))
     print(tree)
     DrawTree('tree', 800, 600, tree)
     # for item in tree.push_arr():
