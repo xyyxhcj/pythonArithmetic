@@ -186,6 +186,41 @@ class TwoThreeTree:
     def push_arr(self):
         return self.root.push_arr()
 
+    # 删除结点
+    def remove_node(self, node: Node):
+        self.root = self.__remove_node(self.root, node)
+
+    def __remove_node(self, tree_node: TreeNode, node: Node, compare: int = None, parent: TreeNode = None) -> TreeNode:
+        tree_node_compare = tree_node.compare(node)
+        if tree_node is None:
+            return parent
+        if CONSTANT['GREATER'] == tree_node_compare:
+            # 新结点小
+            tree_node = self.__remove_node(tree_node.nodes[0], node, tree_node_compare, tree_node)
+        elif CONSTANT['MIDDLE'] == tree_node_compare:
+            tree_node = self.__remove_node(tree_node.nodes[1], node, tree_node_compare, tree_node)
+        elif CONSTANT['LESS'] == tree_node_compare:
+            # 新结点大
+            if len(tree_node.nodes) > 1:
+                tree_node = self.__remove_node(tree_node.nodes[2], node, tree_node_compare, tree_node)
+            else:
+                tree_node = self.__remove_node(tree_node.nodes[1], node, tree_node_compare, tree_node)
+        elif CONSTANT['LEFT'] == tree_node_compare:
+            # 删除左结点
+            pass
+        else:
+            # 删除右结点
+            if tree_node.nodes[1].count > 1:
+                tree_node.nodes[1].count -= 1
+            else:
+                #     x y         X
+                #    / | \  ->   / | \
+                #  T1 T2 T3
+                #  TODO
+                #
+                tree_node.nodes.pop()
+
+
 
 class DrawTree(tkinter.Tk):
 
@@ -228,10 +263,10 @@ class DrawTree(tkinter.Tk):
                 parent_x, parent_y = tree_node.parent.x, tree_node.parent.y
                 if tree_node.sub_type == 0:
                     # 左结点
-                    tree_node.x, tree_node.y = parent_x - x_distance + offset*2, parent_y + node_height
+                    tree_node.x, tree_node.y = parent_x - x_distance + offset * 2, parent_y + node_height
                 elif tree_node.sub_type == 2:
                     # 右结点
-                    tree_node.x, tree_node.y = parent_x + x_distance - offset*2, parent_y + node_height
+                    tree_node.x, tree_node.y = parent_x + x_distance - offset * 2, parent_y + node_height
                 else:
                     # 中结点
                     tree_node.x, tree_node.y = parent_x, parent_y + node_height
