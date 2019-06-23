@@ -90,9 +90,6 @@ class TwoThreeTree:
             self.root = TreeNode(node)
         else:
             self.root = self.__add_node(self.root, node)
-            # if len(self.root.nodes) > 2:
-            #     # 拆分结点 两层->三层 todo 画图
-            #     self.root = self.split_tree_node(self.root)
 
     @staticmethod
     def split_tree_node(tree_node: TreeNode) -> TreeNode:
