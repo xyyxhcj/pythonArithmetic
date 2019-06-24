@@ -221,7 +221,6 @@ class TwoThreeTree:
                 tree_node.nodes.pop()
 
 
-
 class DrawTree(tkinter.Tk):
 
     def __init__(self, class_name, width, height, tree: TwoThreeTree):

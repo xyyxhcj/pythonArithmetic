@@ -175,10 +175,11 @@ class DrawTree(tkinter.Tk):
                 else:
                     # 右结点
                     node.x, node.y = parent_x + x_distance, parent_y + node_height
-                canvas.create_line(parent_x, parent_y, node.x, node.y, fill='red')
                 if node.color == RED:
+                    canvas.create_line(parent_x, parent_y, node.x, node.y, fill='red')
                     canvas.create_text(node.x, node.y, text=node.data, font=font, fill='red')
                 else:
+                    canvas.create_line(parent_x, parent_y, node.x, node.y, fill='blue')
                     canvas.create_text(node.x, node.y, text=node.data, font=font)
 
         self.mainloop()
