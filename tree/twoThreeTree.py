@@ -1,5 +1,4 @@
 # 二三树
-import random
 import tkinter
 
 import math
@@ -191,34 +190,109 @@ class TwoThreeTree:
         self.root = self.__remove_node(self.root, node)
 
     def __remove_node(self, tree_node: TreeNode, node: Node, compare: int = None, parent: TreeNode = None) -> TreeNode:
-        tree_node_compare = tree_node.compare(node)
         if tree_node is None:
             return parent
+        tree_node_compare = tree_node.compare(node)
         if CONSTANT['GREATER'] == tree_node_compare:
             # 新结点小
-            tree_node = self.__remove_node(tree_node.nodes[0], node, tree_node_compare, tree_node)
+            tree_node = self.__remove_node(tree_node.child_list[0], node, tree_node_compare, tree_node)
         elif CONSTANT['MIDDLE'] == tree_node_compare:
-            tree_node = self.__remove_node(tree_node.nodes[1], node, tree_node_compare, tree_node)
+            tree_node = self.__remove_node(tree_node.child_list[1], node, tree_node_compare, tree_node)
         elif CONSTANT['LESS'] == tree_node_compare:
             # 新结点大
             if len(tree_node.nodes) > 1:
-                tree_node = self.__remove_node(tree_node.nodes[2], node, tree_node_compare, tree_node)
+                tree_node = self.__remove_node(tree_node.child_list[2], node, tree_node_compare, tree_node)
             else:
-                tree_node = self.__remove_node(tree_node.nodes[1], node, tree_node_compare, tree_node)
+                tree_node = self.__remove_node(tree_node.child_list[1], node, tree_node_compare, tree_node)
         elif CONSTANT['LEFT'] == tree_node_compare:
             # 删除左结点
-            pass
+            self.size -= tree_node.nodes[0].count
+            if tree_node.child_list[1] is None:
+                remove_node = tree_node
+            else:
+                # 获取右/中子树的最小树节点，替换，再删除移至叶子节点的原节点
+                remove_node = self.get_min(tree_node.child_list[1])
+                # 交换,treeNode中的最小结点索引必为0
+                self.swap(tree_node.nodes[0], remove_node.nodes[0])
+            # 删除treeNode下的第一个结点
+            self.delete_node(remove_node)
         else:
             # 删除右结点
-            if tree_node.nodes[1].count > 1:
-                tree_node.nodes[1].count -= 1
+            self.size -= tree_node.nodes[1].count
+            if tree_node.child_list[1] is None:
+                # 当前已经为叶子节点
+                tree_node.nodes[1].pop()
             else:
-                #     x y         X
-                #    / | \  ->   / | \
-                #  T1 T2 T3
-                #  TODO
-                #
-                tree_node.nodes.pop()
+                # 获取右子树的最小树节点(treeNode中的最小结点索引必为0)，替换，再删除移至叶子节点的原节点
+                remove_node = self.get_min(tree_node.child_list[1])
+                # 交换,treeNode中的最小结点索引必为0
+                self.swap(tree_node.nodes[1], remove_node.nodes[0])
+                # 删除treeNode下的第一个结点
+                self.delete_node(remove_node)
+        if parent is None:
+            return tree_node
+        else:
+            return tree_node.parent
+
+    # 获取当前treeNode子树中最小的node(返回该node所在的TreeNode及该node在nodes中的索引)
+    def get_min(self, tree_node) -> TreeNode:
+        if tree_node.child_list[0] is None:
+            return tree_node
+        else:
+            return self.get_min(tree_node.child_list[0])
+
+    # 交换结点数据
+    @staticmethod
+    def swap(node1, node2):
+        node1.count, node2.count = node2.count, node1.count
+        node1.data, node2.data = node2.data, node1.data
+
+    # 删除treeNode下的第一个结点,当前为叶子节点
+    # 删除3
+    #     5,8               5,8
+    #   /  |  \      ->   /  |  \
+    # 3,4 6,7 9,10       4  6,7 9,10
+
+    #     5,8               6,8
+    #   /  |  \      ->   /  |  \
+    #  3  6,7 9,10       5   7  9,10
+
+    #     5               9
+    #    / \      ->     / \
+    #   3   9,10        5  10
+
+    #     5,8                8
+    #   /  |  \      ->     / \
+    #  3   6  9,10       5,6   9,10
+
+    #    5    ->    5,9
+    #   / \
+    #  3   9
+    @staticmethod
+    def delete_node(remove_node: TreeNode):
+        # 如果树结点存在双结点,则直接将第二个结点替换当前结点
+        if len(remove_node.nodes) > 1:
+            remove_node.nodes[0] = remove_node.nodes.pop()
+        else:
+            tree_parent = remove_node.parent
+            if len(tree_parent.child_list[1].nodes) > 1:
+                # 中/右子结点为双结点
+                tree_parent.child_list[0] = TreeNode(tree_parent.nodes[0], tree_parent)
+                tree_parent.nodes[0] = tree_parent.child_list[1].nodes[0]
+                tree_parent.child_list[1].nodes[0] = tree_parent.child_list[1].nodes.pop()
+            else:
+                # 中间/右子结点为单结点
+                if len(tree_parent.nodes) > 1:
+                    # 父结点为双元素
+                    tree_parent.child_list[0] = TreeNode(tree_parent.nodes[0], tree_parent)
+                    tree_parent.child_list[0].nodes.append(tree_parent.child_list[1].nodes[0])
+                    tree_parent.nodes[0] = tree_parent.nodes.pop()
+                    tree_parent.child_list[1], tree_parent.child_list[2] = tree_parent.child_list[2], None
+                else:
+                    # 父结点为单元素 todo 无法维持树的平衡,需要向上触发父结点进行整理
+                    # 计算到第几层可实现平衡,
+                    tree_parent.nodes.append(tree_parent.child_list[1].nodes[0])
+                    tree_parent.child_list[0] = tree_parent.child_list[1] = None
 
 
 class DrawTree(tkinter.Tk):
@@ -245,8 +319,12 @@ class DrawTree(tkinter.Tk):
         font = ('Couried', 14)
         for tree_node in arr:
             node_text = ''
-            for node in tree_node.nodes:
-                node_text += str(node.data) + ' '
+            for i in range(len(tree_node.nodes)):
+                node_text += str(tree_node.nodes[i].data)
+                if i != len(tree_node.nodes) - 1:
+                    node_text += ','
+            # for node in tree_node.nodes:
+            #     node_text += str(node.data) + ','
             if tree_node.parent is None or not hasattr(tree_node.parent, 'x'):
                 # 根结点
                 # canvas.create_oval(mid - node_width / 2, offset, mid + node_width / 2, offset + node_height,
@@ -276,18 +354,18 @@ class DrawTree(tkinter.Tk):
 
 if __name__ == '__main__':
     tree = TwoThreeTree()
-    # for i in [10, 1, 6, 0, 9, 7, 0, 8, 9, 8]:
-    for i in range(20):
+    for i in [3, 11, 6, 12, 2, 10, 15, 7, 8, 0, 4, 9]:
+        # for i in range(20):
         # tree.add_node(Node(i))
         # DrawTree('tree', 800, 600, tree)
         # tree.add_node(Node(i))
-        randint = random.randint(0, 15)
-        print(randint)
+        # randint = random.randint(0, 15)
+        randint = i
+        print('add %d' % randint)
         tree.add_node(Node(randint))
     print(tree)
     DrawTree('tree', 800, 600, tree)
-    # for item in tree.push_arr():
-    #     print('subType', item['subType'])
-    #     for node in item['nodes']:
-    #         print(node.data, end=',')
-    #     print()
+    for i in range(5):
+        print('remove %d' % i)
+        tree.remove_node(Node(i))
+        DrawTree('tree', 800, 600, tree)
