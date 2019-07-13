@@ -1,4 +1,5 @@
 # 二三树
+import random
 import tkinter
 
 import math
@@ -82,6 +83,8 @@ class TwoThreeTree:
     def __init__(self) -> None:
         self.root = None
         self.size = 0
+        # 存储子树高度,删除时如果高度变更则触发父结点整理 todo
+        self.height = 1
 
     def add_node(self, node: Node):
         self.size += 1
@@ -189,21 +192,22 @@ class TwoThreeTree:
     def remove_node(self, node: Node):
         self.root = self.__remove_node(self.root, node)
 
-    def __remove_node(self, tree_node: TreeNode, node: Node, compare: int = None, parent: TreeNode = None) -> TreeNode:
+    # 如果待删除元素存在且为非叶子节点,用后继的叶子节点的值替代要删除的节点元素,将删除问题转移到叶子节点,避免子分支的处理
+    def __remove_node(self, tree_node: TreeNode, node: Node, parent: TreeNode = None) -> TreeNode:
         if tree_node is None:
             return parent
         tree_node_compare = tree_node.compare(node)
         if CONSTANT['GREATER'] == tree_node_compare:
             # 新结点小
-            tree_node = self.__remove_node(tree_node.child_list[0], node, tree_node_compare, tree_node)
+            tree_node = self.__remove_node(tree_node.child_list[0], node, tree_node)
         elif CONSTANT['MIDDLE'] == tree_node_compare:
-            tree_node = self.__remove_node(tree_node.child_list[1], node, tree_node_compare, tree_node)
+            tree_node = self.__remove_node(tree_node.child_list[1], node, tree_node)
         elif CONSTANT['LESS'] == tree_node_compare:
             # 新结点大
             if len(tree_node.nodes) > 1:
-                tree_node = self.__remove_node(tree_node.child_list[2], node, tree_node_compare, tree_node)
+                tree_node = self.__remove_node(tree_node.child_list[2], node, tree_node)
             else:
-                tree_node = self.__remove_node(tree_node.child_list[1], node, tree_node_compare, tree_node)
+                tree_node = self.__remove_node(tree_node.child_list[1], node, tree_node)
         elif CONSTANT['LEFT'] == tree_node_compare:
             # 删除左结点
             self.size -= tree_node.nodes[0].count
@@ -354,13 +358,13 @@ class DrawTree(tkinter.Tk):
 
 if __name__ == '__main__':
     tree = TwoThreeTree()
-    for i in [3, 11, 6, 12, 2, 10, 15, 7, 8, 0, 4, 9]:
-        # for i in range(20):
+    # for i in [3, 11, 6, 12, 2, 10, 15, 7, 8, 0, 4, 9]:
+    for i in range(20):
         # tree.add_node(Node(i))
         # DrawTree('tree', 800, 600, tree)
         # tree.add_node(Node(i))
-        # randint = random.randint(0, 15)
-        randint = i
+        randint = random.randint(0, 50)
+        # randint = i
         print('add %d' % randint)
         tree.add_node(Node(randint))
     print(tree)
@@ -369,3 +373,6 @@ if __name__ == '__main__':
         print('remove %d' % i)
         tree.remove_node(Node(i))
         DrawTree('tree', 800, 600, tree)
+
+# todo 准备重构 重写一个py 在每个节点存储子结点数量及层数，平衡因子
+#       提取减少结点数量方法，向父结点不断递归，减少后判断平衡因子，不为0时则判断总结点数量是否无法满足当前层数的最小数量,不满足则不断向父级递归，直至根结点，如果仍不满足，则缩小整棵树的层级
